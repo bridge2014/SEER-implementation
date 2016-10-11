@@ -7,11 +7,63 @@
 <body>
 <h2>SEER Implementation Web Page</h2>
 
-<br>
-<br>
-<p>Return Value from job scheduler is {{ return_value }}
-<p>
+<form action="/job_scheduler" method="post">
+    <label for="imageFile">Please select an Image to process:</label>
+    <br><br>
+     <select name="image_file">
+         {% for file_name in  file_list %}
+         <option value="{{ file_name }}"> {{ file_name }} </option>
+         {% endfor %}
+     </select>
+    <br><br>
+    <label for="imageFile">Please select Cancer Type:</label>
+     <select name="cancer_type">
+         <option value="lgg"> lgg </option>
+         <option value="paad"> paad </option>
+         <option value="gbm"> gbm </option>
+         <option value="brca"> brca </option>
+         <option value="luad"> luad </option>
+     </select>
+     <br><br>
+    <label for="imageFile">Please select Image Process Type:</label>
+     <select name="process_type">         
+         <option value="wsi"> Whole Slide Image </option>         
+         <option value="tiles"> Tiles </option>  
+         <option value="onetile"> One Tile </option>
+         <option value="img"> Image </option>        
+     </select>
+     <br><br>
+     
+     <label for="imageFile">Please enter value of minX:</label>
+     <input type="text" name="minX" value="" size=10>
+     <br><br>
+     <label for="imageFile">Please enter value of minY:</label>
+     <input type="text" name="minY" value="" size=10>
+     <br><br>
+     
+      <label for="imageFile">Please enter value of maxX:</label>
+     <input type="text" name="maxX" value="" size=10>
+     <br><br>
+     <label for="imageFile">Please enter value of maxY:</label>
+     <input type="text" name="maxY" value="" size=10>
+     <br><br>
+     
+     <label for="imageFile">Please enter value of tile heigh:</label>
+     <input type="text" name="title_h" value="4096" size=10>
+     <br><br>     
+     <label for="imageFile">Please enter value of tile width:</label>
+     <input type="text" name="title_w" value="4096" size=10>
+     <br><br>
+     
+     <label for="imageFile">Please enter value of patch heigh:</label>
+     <input type="text" name="patch_h" value="1024" size=10>
+     <br><br>     
+     <label for="imageFile">Please enter value of patch width:</label>
+     <input type="text" name="patch_w" value="1024" size=10>
+     <br><br>
+     
+    <input type="submit" value="Process" />
+</form>
 
-<br><br><br>
 </body>
 </html>

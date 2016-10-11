@@ -63,7 +63,7 @@ router.post('/validate', function(req, res) {
 
 
 // start job scheduler
-router.get('/job_scheduler', function(req, res) {
+router.post('/job_scheduler', function(req, res) {
     job_scheduler.start(req, res);
 });
 

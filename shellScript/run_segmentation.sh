@@ -4,6 +4,7 @@
 image_file=$1;
 subjectId=$2;
 caseId=$3;
+cancer_type=$4;
 
 if [[ "$image_file" != "" ]]; then
   echo "image file is provided by user!"
@@ -11,7 +12,8 @@ else
    echo "image file is required!"
    image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs"
    subjectId="TCGA-DU-8164"
-   caseId="TCGA-DU-8164-01Z-00-DX1"
+   caseId="TCGA-DU-8164-01Z-00-DX1"   
+   cancerType="lgg"
 fi
 
 # define all local variables
@@ -24,7 +26,7 @@ segment_executable_path="/home/feiqiao/test/pathomics_analysis/nucleusSegmentati
 #image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs"
 #subjectId="TCGA-DU-8164"
 #caseId="TCGA-DU-8164-01Z-00-DX1"
-cancerType="lgg"
+#cancerType="lgg"
 docker_container_featuredb="mydb1"
 docker_container_analysis="myseg1"
 dbpath="/home/feiqiao/test/db"
@@ -40,7 +42,7 @@ tile_height=512
 patch_width=256
 patch_height=256
 analysis_id="test1"
-ship_step_3=no
+ship_step_3="no"
 dbhost="localhost"
 dbDockerContainerRuning=no
 analysisDockerContainerRuning=no
@@ -51,17 +53,17 @@ analysisDockerContainerRuning=no
 # find out analysis  docker container exists and is runing
 echo "find out analysis  docker container exists and is runing"
 matchingStarted=$(docker ps --filter="name=$docker_container_analysis" -q | xargs)
-[[ -n $matchingStarted ]] && analysisDockerContainerRuning=yes
+[[ -n $matchingStarted ]] && analysisDockerContainerRuning="yes"
 
 #remove analysis docker container if it exists but not runing
 echo "remove analysis docker container if it exists but not runing"
 matching=$(docker ps -a --filter="name=$docker_container_analysis" -q | xargs)
-if [[ "$analysisDockerContainerRuning" = "no" ]] ; then
+if [[ "$analysisDockerContainerRuning" =  "no" ]] ; then
    [[ -n $matching ]] && docker rm $matching
 fi
 
 
-if [[ "$analysisDockerContainerRuning" = "no" ]]; then
+if [[ "$analysisDockerContainerRuning" =  "no" ]]; then
   #step 4:create image analysis container with docker image 
   cd $segment_executable_path
   echo "step 4: Create image analysis container with docker image"

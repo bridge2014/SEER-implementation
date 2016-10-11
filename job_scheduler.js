@@ -4,17 +4,25 @@ var kue = require('kue') ;
 var queue = kue.createQueue();
 var shell_script_location =__dirname + "/shellScript";
 
+var dateFormat = require('dateformat');
 
-function execute_job0(image_file,done){
-    var subjectId=image_file.slice(0,12);
-    var caseId=image_file.slice(0,23);
-   var job0 = queue.create('LOADMETADATA2MONGOJOB', {
-	  author:'bwang',
-	  execute_date:'9_28_2016',
+ 
+
+function execute_job0(req,res,done){
+     var image_file =req.body.image_file;
+     var cancer_type =req.body.cancer_type;
+     var subjectId=image_file.slice(0,12);
+     var caseId=image_file.slice(0,23);
+     var current_time= dateFormat(new Date()); 
+    
+     var job0 = queue.create('LOADMETADATA2MONGOJOB', {
+	    author:'bwang',
+	    execute_time:current_time,
       image_file:image_file,
-       subjectId:subjectId,
-       caseId:caseId
-   }).priority('medium').attempts(3);
+      subjectId:subjectId,
+      caseId:caseId,
+      cancer_type:cancer_type
+   }).priority('medium').attempts(0);
 
   job0
       .on('enqueue',function(){
@@ -31,18 +39,20 @@ function execute_job0(image_file,done){
 	  
 	.on('complete', function(result){
          console.log('----- LOADMETADATA2MONGOJOB completed with data ----- \n', result);
-        // execute_job1(image_file,done);
-		 done();
+         execute_job1(req,res,done);
+		     //done();
      })
 	 
      .on('failed attempt', function(errorMessage, doneAttempts){
          console.log('---------- LOADMETADATA2MONGOJOB failed --------\n');
-		 done();
+	   	  //done();
+         res.render('schedulerDone',{message:'LOADMETADATA2MONGOJOB failed.'});
      })
 	 
 	 .on('failed', function(errorMessage){
         console.log('------------ LOADMETADATA2MONGOJOB failed -----------------\n');
-		done();
+	     //	done();
+        res.render('schedulerDone',{message:'LOADMETADATA2MONGOJOB failed.'});
       })
 	  
 	  .on('progress', function(progress, data){
@@ -61,16 +71,20 @@ function execute_job0(image_file,done){
 
 
 
-function execute_job1(image_file,done){
-    var subjectId=image_file.slice(0,12);
-    var caseId=image_file.slice(0,23);
-   var job1 = queue.create('RUNSEGMENTATIONJOB', {
-	  author: 'bwang',
-	  execute_date:'9_28_2016',
-      image_file:image_file,
-       subjectId:subjectId,
-       caseId:caseId
-   }).priority('medium').attempts(3);
+function execute_job1(req,res,done){
+     var image_file =req.body.image_file;
+     var cancer_type =req.body.cancer_type;
+     var subjectId=image_file.slice(0,12);
+     var caseId=image_file.slice(0,23);
+     var current_time= dateFormat(new Date());  
+     var job1 = queue.create('RUNSEGMENTATIONJOB', {
+	         author: 'bwang',
+	         execute_time:current_time,
+           image_file:image_file,
+           subjectId:subjectId,
+           caseId:caseId,
+           cancer_type:cancer_type
+   }).priority('medium').attempts(0);
 
   job1
       .on('enqueue',function(){
@@ -87,18 +101,20 @@ function execute_job1(image_file,done){
 	  
 	.on('complete', function(result){
          console.log('----- RUNSEGMENTATIONJOB completed with data ----- \n', result);
-         //execute_job2(image_file,done);
-		 done();
+         execute_job2(req,res,done);
+		    // done();
      })
 	 
      .on('failed attempt', function(errorMessage, doneAttempts){
          console.log('---------- RUNSEGMENTATIONJOB failed --------\n');
-		 done();
+		    // done();
+         res.render('schedulerDone',{message:'RUNSEGMENTATIONJOB failed.'});
      })
 	 
 	 .on('failed', function(errorMessage){
         console.log('------------ RUNSEGMENTATIONJOB failed -----------------\n');
-		done();
+		    //done();
+        res.render('schedulerDone',{message:'RUNSEGMENTATIONJOB failed.'});
       })
 	  
 	  .on('progress', function(progress, data){
@@ -117,12 +133,12 @@ function execute_job1(image_file,done){
 
 
 
-function execute_job2(done){
-	
+function execute_job2(req,res,done){	
+  var current_time= dateFormat(new Date()); 
   var job2 = queue.create('LOADFEATUREDB2MONGOJOB', {
       author: 'bwang',
-	  execute_date:'9_28_2016'
-  }).priority('medium').attempts(3);
+	    execute_time:current_time
+  }).priority('medium').attempts(0);
   
   job2.on('enqueue',function(){
    //console.log('------ The LOADFEATUREDB2MONGOJOB is now queued. ------------\n');
@@ -136,15 +152,17 @@ function execute_job2(done){
 
   }).on('complete', function(result){
     console.log('----- LOADFEATUREDB2MONGOJOB completed with data ----- \n', result);
-    //done();
-      response.end('');
+       // done();     
+    res.render('schedulerDone',{message:'LOADFEATUREDB2MONGOJOB is completed.'});    
   
   }).on('failed attempt', function(errorMessage, doneAttempts){
     console.log('------ LOADFEATUREDB2MONGOJOB failed ----------\n');
-	done();
+	   //done();
+    res.render('schedulerDone',{message:'LOADFEATUREDB2MONGOJOB failed.'});
 
   }).on('failed', function(errorMessage){
     console.log('---------- LOADFEATUREDB2MONGOJOB failed -----------\n');
+    res.render('schedulerDone',{message:'LOADFEATUREDB2MONGOJOB failed.'});
 
   }).on('progress', function(progress, data){
     console.log('\r  LOADFEATUREDB2MONGOJOB #' + job2.id + ' ' + progress + '% complete with data ', data );
@@ -178,11 +196,14 @@ queue.process('LOADFEATUREDB2MONGOJOB', function(job, done){
 
 function runJob0(data, done){
         //You can use the job's data object to pass your external script parameters
-		console.log('author: ' + data.author);
+	    	console.log('author: ' + data.author);
+        console.log('execute_time: ' + data.execute_time);
         var image_file = data.image_file;
         var subjectId =data.subjectId;
         var caseId=data.caseId;
-        var shell_command=shell_script_location+'/load_metadata_to_MongoDB.sh ' + image_file+' '+subjectId+' '+caseId;
+        var cancer_type =data.cancer_type;
+        var params=image_file+' '+subjectId+' '+caseId+' '+cancer_type;
+        var shell_command=shell_script_location+'/load_metadata_to_MongoDB.sh '+params;
         var exec = require('child_process').exec, child;
         child = exec(shell_command,
             function (error, stdout, stderr) {
@@ -200,11 +221,14 @@ function runJob0(data, done){
 
 function runJob1(data, done){
         //You can use the job's data object to pass your external script parameters, such as data.xx
-		console.log('author: ' + data.author);
+	     	console.log('author: ' + data.author);
+        console.log('execute_time: ' + data.execute_time);
         var image_file = data.image_file;
         var subjectId =data.subjectId;
         var caseId=data.caseId;
-        var shell_command=shell_script_location+'/run_segmentation.sh ' + image_file+' '+subjectId+' '+caseId;
+        var cancer_type =data.cancer_type;
+        var params=image_file+' '+subjectId+' '+caseId+' '+cancer_type;
+        var shell_command=shell_script_location+'/run_segmentation.sh '+params;
         var exec = require('child_process').exec, child;
         child = exec(shell_command,
             function (error, stdout, stderr) {
@@ -222,7 +246,8 @@ function runJob1(data, done){
 
 function runJob2(data, done){
         //You can use the job's data object to pass your external script parameters
-		console.log('author: ' + data.author);
+	    	console.log('author: ' + data.author);
+        console.log('execute_time: ' + data.execute_time);
         var shell_command=shell_script_location+'/load_featuredb_data_to_MongoDB.sh';
         var exec = require('child_process').exec, child;
         child = exec(shell_command,
@@ -240,11 +265,12 @@ function runJob2(data, done){
 
 // launch the job scheduler
 module.exports = {
-    start: function(request, response) {
-        var image_file =request.body.image_file;
-        console.log("file_name is :"+image_file);
-
-        execute_job0(image_file,function(){});
+    start: function(req, res) {
+       // var image_file =request.body.image_file;
+       // console.log("file_name is :"+image_file);
+       // var cancer_type =request.body.cancer_type;
+        execute_job0(req,res,function(){});
+        //response.render('job_scheduler_done',{});              
     }
 }
 
