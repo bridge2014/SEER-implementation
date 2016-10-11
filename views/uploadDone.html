@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Done</title>
+</head>
+<body>
+<h2>SEER Implementation Web Page</h2>
+<br><br><br>
+Your Imafe file has been uploaded sucessfully!
+<br><br><br>
+
+<p>File name  is {{file_name}}
+  <br><br> and file size is {{file_size}}
+</p>
+<br><br>
+<p>
+The Image files you uploaded so far:
+{% for file_name in  file_list %}
+  <li>{{ file_name }}</li>
+     {% else %}
+  <li>file name is empty!</li>
+{% endfor %}
+</p>
+
+<!--
+<br><br><br>
+<form action="/validate" method="post">
+    <label for="imageFile">Please select an Image to process:</label>
+    <br><br>
+     <select name="image_file">
+         {% for file_name in  file_list %}
+         <option value="{{ file_name }}"> {{ file_name }} </option>
+         {% endfor %}
+     </select>
+    <br><br>
+    <input type="submit" value="Process" />
+</form>
+-->
+
+</body>
+</html>

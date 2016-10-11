@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload</title>
+    <!--
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.3.js"></script>
+   -->
+
+ <script>
+     //var host="129.49.249.191";
+    // var port=3008;
+    /*
+     var socket = io.connect('http://localhost:3008');
+     //socket.on('uploadProgress' , function (percent){
+        // var this_percentage =Math.round(percent);
+         $('#percent').text(this_percentage);
+     });
+     */
+
+ </script>
+
+</head>
+<body>
+<h2>SEER Implementation Web Page</h2>
+
+  <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="imageFile">Please Upload Your Image Here:</label>
+         <br><br>
+        <input type="file" id="imageFile" name="imageFile" />
+         <br><br><br>
+        <input type="submit" value="Upload" />
+
+  </form>
+
+<br><br><br>
+
+
+ <!-- Image File Uploading Percentage(%):<div id="percent" style="font-size:180%;color:orangered"></div> -->
+
+<p> my name is :{{myname}}
+    <br>
+my user id is :{{userid}}</p>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+    "name": "seer_implementation",
+    "version": "0.1.0",
+    "description": "javaScript templating test with engin nunjucks ",
+    "main": "app.js",
+    "dependencies": {
+        "express": "~4.14.0",
+        "body-parser": "~1.15.0",
+        "mongodb": "~2.2.10",
+        "nunjucks": "~2.5.2",
+        "nunjucks-date": "~1.2.0",
+        "adm-zip": "^0.4.7",
+        "formidable": "^1.0.17",
+        "fs_extra" :"^0.30.0",
+        "kue":"^0.11.1"
+    },
+    "author": "feiqiao wang",
+    "license": "0BSD"
+}
