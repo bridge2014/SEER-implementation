@@ -22,27 +22,57 @@ echo "docker_image_analysis=$docker_image_analysis"
 
 
 #image_file="command_history.txt"
-image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs"
-subjectId="TCGA-DU-8164"
-caseId="TCGA-DU-8164-01Z-00-DX1"
+image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs"  
 
 if [[ "${image_file:0:4}" = "TCGA"  ]];then  
   subjectId=${image_file:0:12}
   caseId=${image_file:0:23}
   echo "subjectId=$subjectId"
   echo "caseId=$caseId"
+else
+  subjectId="TCGA-DU-8164"
+  caseId="TCGA-DU-8164-01Z-00-DX1"
 fi  
+
+#inp_type="tiles"
+#inp_type="img"
+
+
+inp_type="onetile"
+#inp_type="wsi"
 
 cancerType="lgg"
 
-tile_minx=13000
-tile_miny=13000
-tile_width=512
-tile_height=512
-patch_width=256
-patch_height=256
+#tile_minx=10000
+#tile_miny=10000
+#tile_width=512
+#tile_height=512
+#patch_width=256
+#patch_height=256
+
+if [[ "$inp_type"="wsi" ]];then
+  tile_minx=0
+  tile_miny=0
+  tile_width=4096
+  tile_height=4096
+  patch_width=4096
+  patch_height=4096
+elif [[ "$inp_type"="onetile" ]];then
+ tile_minx=10000
+ tile_miny=10000
+ tile_width=512
+ tile_height=512
+ patch_width=256
+ patch_height=256
+else
+  echo "Please select wsi or onetile method to segment image!"
+  exit 1; 
+fi
+
+
 
 analysis_id="test1"
+
 dbhost="localhost"
 
 ship_step_3="no"
@@ -105,7 +135,7 @@ matchingStarted=$(docker ps --filter="name=$docker_container_analysis" -q | xarg
 #remove analysis docker container if it exists but not runing
 echo "--> remove analysis docker container if it exists but not runing"
 matching=$(docker ps -a --filter="name=$docker_container_analysis" -q | xargs)
-if [[ "$analysisDockerContainerRuning" = "no" ]] ; then
+if [[ "$analysisDockerContainerRuning" = "no" ]]; then
    [[ -n $matching ]] && docker rm $matching
 fi
 
@@ -171,7 +201,7 @@ echo "--> step 4: Create image analysis container with docker image"
 if [[ "$analysisDockerContainerRuning" = "no" ]]; then
   #step 4:create image analysis container with docker image 
   cd $segment_executable_path 
-  ./run_docker_segment.py start $docker_container_analysis $docker_image_analysis
+  ./run_docker_segment_new.py start $docker_container_analysis $docker_image_analysis
   echo "--> ---------- after step 4 ----------------------------"
 else   
   echo "--> ---------- skip step 4 ------------"
@@ -181,7 +211,14 @@ fi
 #step 5:Run whole slide image segmentation script.
 echo "--> step 5:Run whole slide image segmentation script."
 cd $segment_executable_path
-./run_docker_segment.py segment $docker_container_analysis  $image_file_path/$image_file  $seg_output_path/$seg_output_file -s $tile_minx,$tile_miny -b $tile_width,$tile_height -d $patch_width,$patch_height -a $analysis_id -c $caseId -p $subjectId
+if [[ "$inp_type" = "onetile" ]];then
+   ./run_docker_segment_new.py segment $docker_container_analysis  $image_file_path/$image_file  $seg_output_path/$seg_output_file $inp_type -s $tile_minx,$tile_miny -b $tile_width,$tile_height -d $patch_width,$patch_height -a $analysis_id -c $caseId -p $subjectId
+elif [[ "$inp_type" = "wsi" ]];then
+  ./run_docker_segment_new.py segment $docker_container_analysis  $image_file_path/$image_file  $seg_output_path/$seg_output_file $inp_type -s $tile_minx,$tile_miny -b $tile_width,$tile_height -d $patch_width,$patch_height -a $analysis_id -c $caseId -p $subjectId
+else
+  echo "--> Error: You must select one of segmentation methods!";
+  exit 1;
+fi
 echo "--> --------------  after step 5 ------------------"
 
 
