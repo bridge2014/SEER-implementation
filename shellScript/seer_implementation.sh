@@ -22,7 +22,11 @@ echo "docker_image_analysis=$docker_image_analysis"
 
 
 #image_file="command_history.txt"
-image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs"  
+#image_file="TCGA-DU-8164-01Z-00-DX1.7a39faea-a8f4-4da9-a3e9-b899192445c8.svs" 
+#image_file="TCGA-FG-6692-01Z-00-DX1.719e6a21-c620-46a4-a47e-fb0fccc34cec.svs "
+image_file="TCGA-DU-5854-01Z-00-DX1.b4d00993-a322-4d5a-b7a1-06db7ad078ab.svs"
+#image_file="TCGA-FG-5964-01Z-00-DX1.971827c7-4e41-4b8c-af02-01b340cf4cbd.svs"
+
 
 if [[ "${image_file:0:4}" = "TCGA"  ]];then  
   subjectId=${image_file:0:12}
@@ -57,9 +61,9 @@ if [[ "$inp_type"="wsi" ]];then
   tile_height=4096
   patch_width=4096
   patch_height=4096
-elif [[ "$inp_type"="onetile" ]];then
- tile_minx=10000
- tile_miny=10000
+elif [[ "$inp_type" = "onetile" ]];then
+ tile_minx=1000
+ tile_miny=1000
  tile_width=512
  tile_height=512
  patch_width=256
@@ -75,13 +79,13 @@ analysis_id="test1"
 
 dbhost="localhost"
 
-ship_step_3="no"
+skip_step_3="no"
 dbDockerContainerRuning="no"
 analysisDockerContainerRuning="no"
 
 
-echo "Enter image file from prompt(y/n)?"
-read image_file_from_prompt
+#echo "Enter image file from prompt(y/n)?"
+#read image_file_from_prompt
 
 if [[ "$image_file_from_prompt" = "y" ]];then
   #prompt user to enter image file path and name
@@ -97,8 +101,9 @@ if [[ "$image_file_from_prompt" = "y" ]];then
 fi
 
 
-echo "Enter tile_minx and tile_miny from prompt (y/n)?"
-read tile_minxy_from_prompt
+#echo "Enter tile_minx and tile_miny from prompt (y/n)?"
+#read tile_minxy_from_prompt
+
 if [[ "$tile_minxy_from_prompt" = "y" ]];then
   echo "Please enter tile_minx"
   read tile_minx
@@ -117,7 +122,7 @@ basename=$(basename "$image_file")
 #find out featuredb docker container exists and is runing
 echo "--> find out featuredb docker container exists and is runing"
 runingDBcontainer=$(docker ps --filter="name=$docker_container_featuredb" -q | xargs)
-[[ -n $runingDBcontainer ]] && dbDockerContainerRuning=yes
+[[ -n $runingDBcontainer ]] && dbDockerContainerRuning="yes"
 
 # remove featuredb docker container if it exists but not runing
 echo "--> remove featuredb docker container if it exists but not runing"
@@ -130,7 +135,7 @@ fi
 # find out analysis  docker container exists and is runing
 echo "--> find out analysis  docker container exists and is runing"
 matchingStarted=$(docker ps --filter="name=$docker_container_analysis" -q | xargs)
-[[ -n $matchingStarted ]] && analysisDockerContainerRuning=yes
+[[ -n $matchingStarted ]] && analysisDockerContainerRuning="yes"
 
 #remove analysis docker container if it exists but not runing
 echo "--> remove analysis docker container if it exists but not runing"
@@ -150,7 +155,7 @@ if [[ "$dbDockerContainerRuning" = "no" ]]; then
   #step 1: create container with docker image, mongodb instance with port number and location of data file.
   cd $featuredb_executable_path 
   ./run_docker_featuredb.sh start $docker_container_featuredb --dbpath $dbpath --qryport $qryport --dbport $dbport --image $docker_image_featuredb
-  echo "--> ------------ after step 1 ------------------ "
+  echo "--> ------------ complete step 1 ------------------ "
 else
   echo "--> ------------ skip step 1 ------------"
 fi
@@ -162,7 +167,7 @@ if [[ ! -d $current_db_path ]]; then
    #step 2:create mongo db
    cd $featuredb_executable_path  
    ./run_docker_featuredb.sh create $docker_container_featuredb $mongodb_name
-   echo "--> --------------- after step 2 -----------------------"
+   echo "--> --------------- complete step 2 -----------------------"
 else
   echo "--> ---------------- skip step 2 ------------"
 fi
@@ -184,14 +189,15 @@ fi
 
 #find out whole slide image metadata is in MongoDB or not,if yes, skip step3b
 return_str=$(mongo --eval "connect('$dbhost:$dbport/$mongodb_name').images.find({case_id:'$caseId'}).pretty()"| grep case_id)
-[[ -n return_str ]] && echo "--> whole slide image metadata is in MongoDB already, skip step 3b" && skip_step_3=yes
+echo "return_str is :"$return_str
+[[ -n $return_str ]] && echo "--> whole slide image metadata is in MongoDB already, skip step 3b" && skip_step_3="yes"
 
 echo "--> step 3b: Load whole slide image metadata into MongoDB"
 if [[ "$skip_step_3" = "no" ]];then
   #step 3b: Load whole slide image metadata into MongoDB 
   cd $featuredb_executable_path 
   ./run_docker_featuredb.sh imgmeta $docker_container_featuredb $mongodb_name  $image_file_path/$image_file --image $cancerType $subjectId $caseId
-  echo "--> ---------------- after step 3b --------------------------"
+  echo "--> ---------------- complete step 3b --------------------------"
 else
   echo "--> ---------------- skip step 3b ------------"
 fi
@@ -202,7 +208,7 @@ if [[ "$analysisDockerContainerRuning" = "no" ]]; then
   #step 4:create image analysis container with docker image 
   cd $segment_executable_path 
   ./run_docker_segment_new.py start $docker_container_analysis $docker_image_analysis
-  echo "--> ---------- after step 4 ----------------------------"
+  echo "--> ---------- complete step 4 ----------------------------"
 else   
   echo "--> ---------- skip step 4 ------------"
 fi
@@ -216,10 +222,10 @@ if [[ "$inp_type" = "onetile" ]];then
 elif [[ "$inp_type" = "wsi" ]];then
   ./run_docker_segment_new.py segment $docker_container_analysis  $image_file_path/$image_file  $seg_output_path/$seg_output_file $inp_type -s $tile_minx,$tile_miny -b $tile_width,$tile_height -d $patch_width,$patch_height -a $analysis_id -c $caseId -p $subjectId
 else
-  echo "--> Error: You must select one of segmentation methods!";
+  echo "--> Error: You must select one of segmentation methods wsi or onetile!";
   exit 1;
 fi
-echo "--> --------------  after step 5 ------------------"
+echo "--> --------------  complete step 5 ------------------"
 
 
 #step 6:Load whole slide image featuredb data into MongoDB
@@ -257,7 +263,7 @@ if [[ -f $currentOutputZipFile ]]; then
   
   cd $featuredb_executable_path
    ./run_docker_featuredb.sh loadquip $docker_container_featuredb $mongodb_name $seg_output_path/$seg_output_file csv
-  echo "--> ------------  after step 6 ----------------"
+  echo "--> ------------  complete step 6 ----------------"
   exit 0;
 else
   echo "--> Error: results.zip does NOT exist, skip step 6 ------------"
